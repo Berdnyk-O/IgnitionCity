@@ -1,126 +1,141 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
-using UnityEngine.InputSystem;
+using UnityEngine.Tilemaps;
 
 public class BuildingSystem : MonoBehaviour
 {
-    public const float CellSize = 1f;
+    public static BuildingSystem I;
 
-    [SerializeField] private BuildingData _buildingData1;
-    [SerializeField] private BuildingData _buildingData2;
-    [SerializeField] private BuildingData _buildingData3;
-    [SerializeField] private BuildingPreview _previewPrefab;
-    [SerializeField] private Building _buildingPrefab;
-    [SerializeField] private BuildingGrid _grid;
+    public GridLayout gridLayout;
 
-    private BuildingPreview _preview;
+    [SerializeField] private Tilemap _mainTilemap;
+    [SerializeField] private TileBase _whiteTile;
 
+    private Grid _grid;
+
+    public GameObject prefab1;
+    public GameObject prefab2;
+    public GameObject prefab3;
+
+    private PlaceableObject _objectToPlace;
+
+    void Awake()
+    {
+        I = this;
+        _grid = gridLayout.gameObject.GetComponent<Grid>();
+    }
     void Update()
     {
-        Vector3 mousePosition = GetMouseWorldPosition();
-
-        if (_preview != null)
+        if(Input.GetKeyDown(KeyCode.A))
         {
-            HandlePreview(mousePosition);
+            InitializateWithObject(prefab1);
         }
-        else if(Keyboard.current.digit1Key.wasPressedThisFrame)
+        if (Input.GetKeyDown(KeyCode.S))
         {
-            _preview = CreatePreview(_buildingData1, mousePosition);
+            InitializateWithObject(prefab2);
         }
-        else if (Keyboard.current.digit2Key.wasPressedThisFrame)
+        if (Input.GetKeyDown(KeyCode.D))
         {
-            _preview = CreatePreview(_buildingData2, mousePosition);
-        }
-        else if (Keyboard.current.digit3Key.wasPressedThisFrame)
-        {
-            _preview = CreatePreview(_buildingData3, mousePosition);
-        }
-    }
-
-    private Vector3 GetMouseWorldPosition()
-    {
-        Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
-        Plane groundPlane = new(Vector3.up, Vector3.zero);
-
-        if (groundPlane.Raycast(ray, out float distance))
-        {
-            return ray.GetPoint(distance);
+            InitializateWithObject(prefab3);
         }
 
-        return Vector3.zero;
-    }
-
-    private void HandlePreview(Vector3 mouseworldPosition)
-    {
-        _preview.transform.position = mouseworldPosition;
-        List<Vector3> buildPositions = _preview.BuildingModel.GetAllBuildingPositions();
-        bool canBuild = _grid.CanBuild(buildPositions);
-
-        if (canBuild)
+        if(!_objectToPlace)
         {
-            _preview.transform.position = GetSnappedCenterPosition(buildPositions);
-            _preview.ChangeState(BuildingPreviewState.Positive);
+            return;
+        }
 
-            if (Mouse.current.leftButton.isPressed)
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            if (CanBePlaced(_objectToPlace))
             {
-                PlaceBuilding(buildPositions);
+                _objectToPlace.Place();
+
+                Vector3Int start = gridLayout.WorldToCell(_objectToPlace.GetStartPosition());
+                TakeArea(start, _objectToPlace.Size);
             }
+            else
+            {
+                Destroy(_objectToPlace.gameObject);
+            }
+        }
+    }
+
+    public static Vector3 GetMouseWorldPosition()
+    {
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        if(Physics.Raycast(ray,out RaycastHit hit))
+        {
+            return hit.point;
         }
         else
         {
-            _preview.ChangeState(BuildingPreviewState.Negative);
+            return Vector3.zero;
         }
+    }
 
-        if (Keyboard.current.rKey.wasPressedThisFrame)
+    public Vector3 SnapCoordinatesToGrid(Vector3 position)
+    {
+        Vector3Int cellPos = gridLayout.WorldToCell(position);
+        position = _grid.GetCellCenterWorld(cellPos);
+
+        return position;
+    }
+
+    public void InitializateWithObject(GameObject prefab)
+    {
+        Debug.Log($"Beginning of {prefab} initialization");
+
+        Vector3 position = SnapCoordinatesToGrid(Vector3.zero);
+
+        GameObject obj = Instantiate(prefab, position, Quaternion.identity);
+        _objectToPlace = obj.GetComponent<PlaceableObject>();
+        obj.AddComponent<ObjectDrag>();
+
+        Debug.Log($"{prefab} initialized, pos: {position}");
+    }
+
+    private static TileBase[] GetTilesBlock(BoundsInt area, Tilemap tilemap)
+    {
+        TileBase[] array = new TileBase[(area.size.x+1)  * (area.size.y +1) * area.size.z];
+        int counter = 0;
+
+        foreach (var v in area.allPositionsWithin)
         {
-            _preview.Rotate(90);
+            Vector3Int pos = new Vector3Int(v.x, v.y, 0);
+            array[counter] = tilemap.GetTile(pos);
+
+            counter++;
         }
+        
+        return array;
     }
 
-    //private Vector3 GetSnappedCenterPosition(List<Vector3> allBuildingPositions)
-    //{
-    //    List<int> xs = allBuildingPositions.Select(p => Mathf.FloorToInt(p.x)).ToList();
-    //    List<int> zs = allBuildingPositions.Select(p => Mathf.FloorToInt(p.z)).ToList();
-    //    //float centerX = (xs.Min() + xs.Max()) / 2f + CellSize / 2f;
-    //    //float centerZ = (zs.Min() + zs.Max()) / 2f + CellSize / 2f;
-
-    //    float centerX = MathF.Floor(((xs.Min() + xs.Max()) / 2f + CellSize / 2f) / CellSize) * CellSize;
-    //    float centerZ = MathF.Floor(((zs.Min() + zs.Max()) / 2f + CellSize / 2f) / CellSize) * CellSize;
-    //    return new(centerX, 0, centerZ);
-    //}
-
-    private Vector3 GetSnappedCenterPosition(List<Vector3> allBuildingPositions)
+    private bool CanBePlaced(PlaceableObject placeableObject)
     {
-        List<int> xs = allBuildingPositions
-            .Select(p => Mathf.FloorToInt(p.x / CellSize))
-            .ToList();
+        BoundsInt area = new BoundsInt();
+        area.position = gridLayout.WorldToCell(_objectToPlace.GetStartPosition());
+        area.size = new Vector3Int(
+            placeableObject.Size.x+1, 
+            placeableObject.Size.y+1,
+            placeableObject.Size.z);
 
-        List<int> zs = allBuildingPositions
-            .Select(p => Mathf.FloorToInt(p.z / CellSize))
-            .ToList();
+        TileBase[] baseArrey = GetTilesBlock(area, _mainTilemap);
 
-        float centerX = (xs.Min() + xs.Max() + 1) * CellSize / 2f;
-        float centerZ = (zs.Min() + zs.Max() + 1) * CellSize / 2f;
+        foreach (var b in baseArrey)
+        {
+            if (b == _whiteTile)
+            {
+                Debug.Log("<color=red>Buinding cannot be placed</color>");
+                return false;
+            }
+        }
 
-        return new Vector3(centerX, 0, centerZ);
+        return true;
     }
 
-    private void PlaceBuilding(List<Vector3> buildingPositions)
+    public void TakeArea(Vector3Int start, Vector3Int size)
     {
-        Building building = Instantiate(_buildingPrefab, _preview.transform.position, Quaternion.identity);
-        building.SetUp(_preview.Data, _preview.BuildingModel.Rotation);
-        _grid.SetBuilding(building, buildingPositions);
-        Destroy(_preview.gameObject);
-        _preview = null;
-    }
-
-    private BuildingPreview CreatePreview(BuildingData data, Vector3 position) 
-    {
-        BuildingPreview buildingPreview = Instantiate(_previewPrefab, position, Quaternion.identity);
-        buildingPreview.SetUp(data);
-
-        return buildingPreview;
+        _mainTilemap.BoxFill(start, _whiteTile,
+            start.x, start.y,
+            start.x + size.x, start.y + size.y);
     }
 }

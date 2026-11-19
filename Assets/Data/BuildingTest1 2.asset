@@ -10,7 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e5e47fc300c97fa4a9f6162fbc74a39f, type: 3}
-  m_Name: BuildingTest3
+  m_Name: BuildingTest1 2
   m_EditorClassIdentifier: Assembly-CSharp::BuildingData
-  <Description>k__BackingField: Build 3
-  <Model>k__BackingField: {fileID: 1518507029237025932, guid: d0254cb65f809ab43be46cf81104cb07, type: 3}
+  <Size>k__BackingField:
+    Width: 2
+    Height: 1
+  <Description>k__BackingField: Build 2
+  <Model>k__BackingField: {fileID: 7660001400668815721, guid: ed9f057d6b6566246a6742fab7bd3b03, type: 3}
