@@ -14,6 +14,34 @@ public class PlaceableObject : MonoBehaviour
         CalculateSizeInCalls();
     }
 
+    public void RotateRight()
+    {
+        Rotate(true);
+    }
+
+    public void RotateLeft()
+    {
+        Rotate(false);
+    }
+
+    private void Rotate(bool toRight)
+    {
+        int side = toRight ? 1 : -1;
+
+        transform.Rotate(0, side * 90, 0);
+        Size = new Vector3Int(Size.y, Size.x, 1);
+
+        Vector3[] vertices = new Vector3[_vertices.Length];
+
+        for (int i = 0; i < vertices.Length; i++)
+        {
+            int index = (i + side + _vertices.Length) % _vertices.Length;
+            vertices[i] = _vertices[index];
+        }
+
+        _vertices = vertices;
+    }
+
     private void GetColliderVertexPositions()
     {
         BoxCollider b = GetComponent<BoxCollider>();

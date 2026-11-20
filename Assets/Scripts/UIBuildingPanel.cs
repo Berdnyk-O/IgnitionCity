@@ -1,13 +1,13 @@
-using System;
 using UnityEngine;
 
 public class UIBuildingPanel : MonoBehaviour
 {
     [SerializeField] private BuildingData[] _buildingDatas;
-
     [SerializeField] private GameObject _buildingPanelContent;
     [SerializeField] private GameObject _roadPanelContent;
     [SerializeField] private UIBuildingItem _UIBuildingItemPrefab;
+
+    [SerializeField] private GameObject _placementSection;
 
     void Start()
     {
@@ -19,7 +19,6 @@ public class UIBuildingPanel : MonoBehaviour
             {
                 parent = _roadPanelContent;
             }
-
 
             UIBuildingItem building = Instantiate(
                 _UIBuildingItemPrefab,
@@ -37,5 +36,17 @@ public class UIBuildingPanel : MonoBehaviour
     private void OnCreateBuilding(int index)
     {
         BuildingSystem.I.InitializateWithObject(_buildingDatas[index].Model);
+        _placementSection.SetActive(true);
+    }
+
+    public void OnPlaceBuilding()
+    {
+        _placementSection.SetActive(false);
+        BuildingSystem.I.PlaceObject();
+    }
+
+    public void OnRotateBuilding(bool toRight)
+    {
+        BuildingSystem.I.Rotate(toRight);
     }
 }

@@ -1,5 +1,4 @@
-﻿
-public enum BuildingType
+﻿public enum BuildingType
 {
     Building = 0,
     Road,

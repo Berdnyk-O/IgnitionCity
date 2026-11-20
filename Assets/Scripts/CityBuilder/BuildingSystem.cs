@@ -12,10 +12,6 @@ public class BuildingSystem : MonoBehaviour
 
     private Grid _grid;
 
-    public GameObject prefab1;
-    public GameObject prefab2;
-    public GameObject prefab3;
-
     private PlaceableObject _objectToPlace;
 
     void Awake()
@@ -24,45 +20,60 @@ public class BuildingSystem : MonoBehaviour
         _grid = gridLayout.gameObject.GetComponent<Grid>();
     }
     void Update()
-    {
-        if(Input.GetKeyDown(KeyCode.A))
-        {
-            InitializateWithObject(prefab1);
-        }
-        if (Input.GetKeyDown(KeyCode.S))
-        {
-            InitializateWithObject(prefab2);
-        }
-        if (Input.GetKeyDown(KeyCode.D))
-        {
-            InitializateWithObject(prefab3);
-        }
-
-        if(!_objectToPlace)
+    {        
+        if (!_objectToPlace)
         {
             return;
         }
 
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Q))
         {
-            if (CanBePlaced(_objectToPlace))
-            {
-                _objectToPlace.Place();
+            Rotate(false);
+        }
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            Rotate(true);
+        }
 
-                Vector3Int start = gridLayout.WorldToCell(_objectToPlace.GetStartPosition());
-                TakeArea(start, _objectToPlace.Size);
-            }
-            else
-            {
-                Destroy(_objectToPlace.gameObject);
-            }
+        if (Input.GetKeyDown(KeyCode.W))
+        {
+            PlaceObject();
+        }
+    }
+
+    public void Rotate(bool toRight)
+    {
+        if (toRight)
+        {
+            _objectToPlace.RotateRight();
+        }
+        else
+        {
+            _objectToPlace.RotateLeft();
+        }
+    }    
+
+    public void PlaceObject()
+    {
+        if (CanBePlaced(_objectToPlace))
+        {
+            _objectToPlace.Place();
+            
+            Vector3Int start = gridLayout.WorldToCell(_objectToPlace.GetStartPosition());
+            TakeArea(start, _objectToPlace.Size);
+
+            _objectToPlace = null;
+        }
+        else
+        {
+            Destroy(_objectToPlace.gameObject);
         }
     }
 
     public static Vector3 GetMouseWorldPosition()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        if(Physics.Raycast(ray,out RaycastHit hit))
+        if (Physics.Raycast(ray,out RaycastHit hit))
         {
             return hit.point;
         }
@@ -82,6 +93,11 @@ public class BuildingSystem : MonoBehaviour
 
     public void InitializateWithObject(GameObject prefab)
     {
+        if (_objectToPlace != null && !_objectToPlace.Placed) 
+        {
+            Destroy(_objectToPlace.gameObject);
+        }
+
         Debug.Log($"Beginning of {prefab} initialization");
 
         Vector3 position = SnapCoordinatesToGrid(Vector3.zero);
