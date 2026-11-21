@@ -5,7 +5,6 @@ public class ToggleColor : MonoBehaviour
 {
     [SerializeField] private Toggle _toggle;
     [SerializeField] private Image _background;
-
     [SerializeField] private Color _onColor = Color.white;
     [SerializeField] private Color _offColor = Color.gray;
 

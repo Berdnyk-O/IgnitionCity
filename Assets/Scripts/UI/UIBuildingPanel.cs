@@ -35,7 +35,7 @@ public class UIBuildingPanel : MonoBehaviour
 
     private void OnCreateBuilding(int index)
     {
-        BuildingSystem.I.InitializateWithObject(_buildingDatas[index].Model);
+        BuildingSystem.I.InitializateWithObject(_buildingDatas[index]);
         _placementSection.SetActive(true);
     }
 

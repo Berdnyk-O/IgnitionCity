@@ -13,6 +13,7 @@ public class BuildingSystem : MonoBehaviour
     private Grid _grid;
 
     private PlaceableObject _objectToPlace;
+    private BuildingData _placeableObjectData;
 
     void Awake()
     {
@@ -62,6 +63,12 @@ public class BuildingSystem : MonoBehaviour
             Vector3Int start = gridLayout.WorldToCell(_objectToPlace.GetStartPosition());
             TakeArea(start, _objectToPlace.Size);
 
+            if(_placeableObjectData.Type == BuildingType.Building)
+            {
+                BuildingObject building = _objectToPlace.gameObject.AddComponent<BuildingObject>();
+                building.Init(_placeableObjectData);
+            }
+
             _objectToPlace = null;
         }
         else
@@ -91,22 +98,24 @@ public class BuildingSystem : MonoBehaviour
         return position;
     }
 
-    public void InitializateWithObject(GameObject prefab)
+    public void InitializateWithObject(BuildingData data)
     {
         if (_objectToPlace != null && !_objectToPlace.Placed) 
         {
             Destroy(_objectToPlace.gameObject);
         }
 
-        Debug.Log($"Beginning of {prefab} initialization");
+        Debug.Log($"Beginning of {data.Model} initialization");
 
         Vector3 position = SnapCoordinatesToGrid(Vector3.zero);
 
-        GameObject obj = Instantiate(prefab, position, Quaternion.identity);
+        GameObject obj = Instantiate(data.Model, position, Quaternion.identity);
         _objectToPlace = obj.GetComponent<PlaceableObject>();
         obj.AddComponent<ObjectDrag>();
 
-        Debug.Log($"{prefab} initialized, pos: {position}");
+        _placeableObjectData = data;
+
+        Debug.Log($"{data.Model} initialized, pos: {position}");
     }
 
     private static TileBase[] GetTilesBlock(BoundsInt area, Tilemap tilemap)
