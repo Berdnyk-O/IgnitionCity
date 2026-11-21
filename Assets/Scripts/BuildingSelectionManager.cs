@@ -22,7 +22,7 @@ public class BuildingSelectionManager : MonoBehaviour
         {
             BuildingObject building = hit.collider.GetComponentInParent<BuildingObject>();
 
-            if (building != null)
+            if (building != null && BuildingSystem.I.IsNoObjectToPlace)
             {
                 _infoPanel.Show(building);
                 return;

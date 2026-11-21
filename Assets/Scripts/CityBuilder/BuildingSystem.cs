@@ -20,6 +20,7 @@ public class BuildingSystem : MonoBehaviour
         I = this;
         _grid = gridLayout.gameObject.GetComponent<Grid>();
     }
+
     void Update()
     {        
         if (!_objectToPlace)
@@ -41,7 +42,7 @@ public class BuildingSystem : MonoBehaviour
             PlaceObject();
         }
     }
-
+    
     public void Rotate(bool toRight)
     {
         if (toRight)
@@ -163,4 +164,6 @@ public class BuildingSystem : MonoBehaviour
             start.x, start.y,
             start.x + size.x, start.y + size.y);
     }
+
+    public bool IsNoObjectToPlace => _objectToPlace == null;
 }
