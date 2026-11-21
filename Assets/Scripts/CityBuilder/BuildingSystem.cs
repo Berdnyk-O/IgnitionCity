@@ -9,7 +9,7 @@ public class BuildingSystem : MonoBehaviour
 
     [SerializeField] private Tilemap _mainTilemap;
     [SerializeField] private TileBase _whiteTile;
-
+    [SerializeField] private Vector3 _spawnPosition;
     private Grid _grid;
 
     private PlaceableObject _objectToPlace;
@@ -107,7 +107,7 @@ public class BuildingSystem : MonoBehaviour
 
         Debug.Log($"Beginning of {data.Model} initialization");
 
-        Vector3 position = SnapCoordinatesToGrid(Vector3.zero);
+        Vector3 position = SnapCoordinatesToGrid(_spawnPosition);
 
         GameObject obj = Instantiate(data.Model, position, Quaternion.identity);
         _objectToPlace = obj.GetComponent<PlaceableObject>();
