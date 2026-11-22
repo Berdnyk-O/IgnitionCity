@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 public class UIBuildingPanel : MonoBehaviour
 {
@@ -8,6 +9,7 @@ public class UIBuildingPanel : MonoBehaviour
     [SerializeField] private UIBuildingItem _UIBuildingItemPrefab;
 
     [SerializeField] private GameObject _placementSection;
+    [SerializeField] private Toggle _isDeleteModeToggle;
 
     void Start()
     {
@@ -37,10 +39,13 @@ public class UIBuildingPanel : MonoBehaviour
     {
         BuildingSystem.I.InitializateWithObject(_buildingDatas[index]);
         _placementSection.SetActive(true);
+        _isDeleteModeToggle.isOn = false;
+        _isDeleteModeToggle.gameObject.SetActive(false);
     }
 
     public void OnPlaceBuilding()
     {
+        _isDeleteModeToggle.gameObject.SetActive(true);
         _placementSection.SetActive(false);
         BuildingSystem.I.PlaceObject();
     }

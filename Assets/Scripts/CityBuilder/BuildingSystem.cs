@@ -166,4 +166,27 @@ public class BuildingSystem : MonoBehaviour
     }
 
     public bool IsNoObjectToPlace => _objectToPlace == null;
+
+    public void RemoveBuilding(GameObject buildingObject)
+    {
+        PlaceableObject placeable = buildingObject.GetComponent<PlaceableObject>();
+
+        if (placeable == null)
+            return;
+
+        Vector3Int start = gridLayout.WorldToCell(placeable.GetStartPosition());
+
+        for (int x = 0; x <= placeable.Size.x; x++)
+        {
+            for (int y = 0; y <= placeable.Size.y; y++)
+            {
+                _mainTilemap.SetTile(
+                    new Vector3Int(start.x + x, start.y + y, 0),
+                    null
+                );
+            }
+        }
+
+        Destroy(buildingObject);
+    }
 }
